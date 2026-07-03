@@ -2,7 +2,9 @@ name: Portfolio CI/CD Pipeline
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+
   workflow_dispatch:
 
 permissions:
@@ -10,34 +12,64 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
 
   test:
     runs-on: ubuntu-latest
 
     steps:
+
+      # Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       # Test Case 1
-      - name: Test Case 1 - Check Required Files
+      - name: TC01 - Verify Required Files
         run: |
+          echo "Running Test Case 1..."
           test -f index.html
           test -f style.css
           test -f script.js
-          echo "✅ Test Case 1 Passed"
+          echo "✅ TC01 Passed"
 
       # Test Case 2
-      - name: Test Case 2 - Validate JavaScript
+      - name: TC02 - Validate JavaScript Syntax
         run: |
+          echo "Running Test Case 2..."
           node --check script.js
-          echo "✅ Test Case 2 Passed"
+          echo "✅ TC02 Passed"
 
       # Test Case 3
-      - name: Test Case 3 - Verify HTML Content
+      - name: TC03 - Verify HTML Title
         run: |
+          echo "Running Test Case 3..."
           grep -q "<title>" index.html
-          echo "✅ Test Case 3 Passed"
+          echo "✅ TC03 Passed"
+
+      # Test Case 4
+      - name: TC04 - Verify CSS File is Not Empty
+        run: |
+          echo "Running Test Case 4..."
+          test -s style.css
+          echo "✅ TC04 Passed"
+
+      # Test Case 5
+      - name: TC05 - Verify JavaScript File is Not Empty
+        run: |
+          echo "Running Test Case 5..."
+          test -s script.js
+          echo "✅ TC05 Passed"
+
+      # All Tests Passed
+      - name: Test Summary
+        run: |
+          echo "=================================="
+          echo " All 5 Test Cases Passed Successfully"
+          echo "=================================="
 
   deploy:
     needs: test
@@ -50,13 +82,23 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/configure-pages@v5
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload Website Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: .
 
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Deployment Successful
+        run: |
+          echo "=================================="
+          echo " Website Successfully Deployed"
+          echo "=================================="
