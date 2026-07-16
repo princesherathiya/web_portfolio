@@ -1,0 +1,104 @@
+name: Portfolio CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Test Case 1
+      - name: TC01 - Verify Required Files
+        run: |
+          echo "Running Test Case 1..."
+          test -f index.html
+          test -f style.css
+          test -f script.js
+          echo "✅ TC01 Passed"
+
+      # Test Case 2
+      - name: TC02 - Validate JavaScript Syntax
+        run: |
+          echo "Running Test Case 2..."
+          node --check script.js
+          echo "✅ TC02 Passed"
+
+      # Test Case 3
+      - name: TC03 - Verify HTML Title
+        run: |
+          echo "Running Test Case 3..."
+          grep -q "<title>" index.html
+          echo "✅ TC03 Passed"
+
+      # Test Case 4
+      - name: TC04 - Verify CSS File is Not Empty
+        run: |
+          echo "Running Test Case 4..."
+          test -s style.css
+          echo "✅ TC04 Passed"
+
+      # Test Case 5
+      - name: TC05 - Verify JavaScript File is Not Empty
+        run: |
+          echo "Running Test Case 5..."
+          test -s script.js
+          echo "✅ TC05 Passed"
+
+      # All Tests Passed
+      - name: Test Summary
+        run: |
+          echo "=================================="
+          echo " All 5 Test Cases Passed Successfully"
+          echo "=================================="
+
+  deploy:
+    needs: test
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Website Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Deployment Successful
+        run: |
+          echo "=================================="
+          echo " Website Successfully Deployed"
+          echo "=================================="
