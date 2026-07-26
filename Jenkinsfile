@@ -1,28 +1,27 @@
-node {
-    stage('Checkout') {
-        checkout scm
-    }
-    stage('Show Files') {
-        bat 'dir'
-    }
-    stage('Verify Files') {
+pipeline {
+    agent any
 
-        if (!fileExists('index.html')) {
-            error("index.html not found")
-        }
-        if (!fileExists('style.css')) {
-            error("style.css not found")
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/princesherathiya/web_portfolio.git'
+            }
         }
 
-        if (!fileExists('script.js')) {
-            error("script.js not found")
+        stage('Test') {
+            steps {
+                echo 'Running Test Cases...'
+            }
         }
 
-        echo "All files found."
+        stage('Deploy') {
+            steps {
+                sh '''
+                sudo cp -r * /var/www/html/
+                sudo systemctl restart nginx
+                '''
+            }
+        }
     }
-
-    stage('Build Successful') {
-        echo "Portfolio Build Successful!"
-    }
-
 }
